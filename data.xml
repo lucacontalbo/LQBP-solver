@@ -92,4 +92,16 @@
                         <cell>1</cell>
                 </fourthrow>
 	</B>
+	<popsize>
+		<cell>10</cell>
+	</popsize>
+	<crossprob>
+		<cell>0.75</cell>
+	</crossprob>
+	<mutationprob>
+		<cell>0.6</cell>
+	</mutationprob>
+	<maxgeneration>
+		<cell>30</cell>
+	</maxgeneration>
 </app>
