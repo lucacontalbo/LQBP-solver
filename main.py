@@ -1,4 +1,4 @@
-from tester import Tester
+from genetic import Genetic
 
-t = Tester('data.xml')
+g = Genetic('data.xml')
 print("everything fine")
