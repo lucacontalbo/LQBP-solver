@@ -110,12 +110,10 @@ class LQBP:
 		self.Q = np.array(self.Q)
 		self.max1 = int(self.max1)
 		self.max2 = int(self.max2)
-		self.ubound = 1000
+		self.ubound = 1000 #max value for variables. It can be changed
 
-	def get_feasible(chrm): #input: chromosome
-		u = np.zeros(self.m)
-		w = np.zeros(self.m)
-		v = np.zeros(self.ylength)
+	def get_feasible(self,chrm): #input: chromosome
+		x = np.array([])
 		uzeros = np.array([]) #0: the corresponding u value must be 0. 1: the corresponding u value must be >= 0
 		wzeros = np.array([]) #same
 		vzeros = np.array([]) #same
@@ -126,3 +124,96 @@ class LQBP:
 		for i in range(self.ylength):
 			vzeros = np.append(vzeros,[0 if chrm[self.m+i]==0 else 1])
 			yzeros = np.append(yzeros,[1 if chrm[self.m+i]==0 else 0])
+
+		for i in range(self.xlength):
+			x = np.append(x,[random.randint(0,self.ubound)])
+
+		x,y,u,w,v = calculate(x,uzeros,wzeros,vzeros,yzeros)
+		#TODO: parse y',u',w',v' in y,u,w,v
+
+	def calculate(self,x,uzeros,wzeros,vzeros,yzeros):
+		u = np.zeros(self.count_ones(uzeros))
+		w = np.zeros(self.count_ones(wzeros))
+		v = np.zeros(self.count_ones(vzeros))
+		y = np.array(self.count_ones(yzeros))
+		bfirst = self.delete_l(self.b,yzeros)
+		Bfirst = self.delete_mcol(self.B,yzeros)
+		Bsecond = self.delete_mrow(self.B,uzeros)
+		Q0 = self.get_submatr(self.Q,len(self.Q)-self.ylength,len(self.Q)-self.ylength,self.ylength,self.ylength)
+		Q1 = self.get_submatr(self.Q,self.xlength,0,self.ylength,self.xlength)
+		Q0 = self.delete_mcol(Q0,yzeros)
+		while(!self.end_comp(u,w,v)):
+			val = self.simplex(x,u,w,v,y,bfirst,Bfirst,Bsecond,Q0,Q1) #TODO
+			if val != -1:
+				break
+			u,w,v = self.next(u,w,v)
+		y = val
+		return x,y,u,w,v
+
+	def next(self,u,w,v):
+		found = False
+		tmp = np.concatenate((u,w,v))
+		for i in range(len(tmp)):
+			if tmp[-i-1] == 0:
+				tmp[-i-1] = 1
+				for j in range(i):
+					tmp[-j-1] = 0
+				break
+		u = tmp[:self.m]
+		w = tmp[self.m:self.m+self.m]
+		v = tmp[self.m+self.m:]
+		return u,w,v
+
+	def get_submatr(self,m,x,y,length1,length2): #get quadratic submatr starting from (x,y) and spanning for length
+		mat = np.array([])
+		for i in range(length1):
+			tmp = np.array([])
+			for j in range(length2):
+				tmp = np.append(tmp,m[x+i][y+j])
+			mat = np.append(mat,tmp)
+		return mat
+
+	def delete_l(self,a,l): #deletes a elements based on if the corresponding value inside list l is 1 or 0 (0 -> delete)
+		if len(a) != len(l):
+			return -1 #len must be equal
+		b = np.array([])
+		for i in range(len(a)):
+			if l[i] == 1:
+				b = np.append(b,[a[i]])
+		return b
+
+	def delete_mcol(self,m,l): #deletes a column based on if the corresponding value inside l is 1 or 0 (0 -> delete)
+		if len(m) > 0 and len(m[0]) != len(l):
+			return -1 #len must be equal
+		b = np.array([])
+		for i in range(len(m[0])):
+			if l[i] == 1:
+				b = np.append(b,m[:,i],axis=1)
+		return b
+
+	def delete_mrow(self,m,l): #deletes a row based on if the corresponding value inside l is 1 or 0 (0 -> delete)
+		if len(m) != len(l):
+			return -1
+		b = np.array([])
+		for i in range(len(m)):
+			if l[i] == 1:
+				b = np.append(b,m[i,:])
+		return b
+
+
+	def count_ones(self,l): #count number of ones in a list
+		c = 0
+		for i in range(len(l)):
+			if l[i] == 1:
+				c += 1
+		return c
+
+	def end_comp(self,u,w,v): #when all slack variables reach a maximum, end the computation to avoid infinite computation
+		end = True
+		for i in range(self.m):
+			if u[i] != self.ubound or w[i] != self.ubound:
+				end = False
+		for i in range(self.ylength):
+			if v[i] != self.ubound:
+				end = False
+		return end
