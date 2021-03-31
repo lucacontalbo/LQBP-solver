@@ -104,4 +104,10 @@
 	<maxgeneration>
 		<cell>30</cell>
 	</maxgeneration>
+	<max1>
+		<cell>1</cell>
+	</max1>
+	<max2>
+		<cell>1</cell>
+	</max2>
 </app>

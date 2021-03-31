@@ -1,5 +1,6 @@
 import numpy as np
 import lxml.etree
+import random
 
 class LQBP:
 	def __init__(self):
@@ -36,17 +37,8 @@ class LQBP:
 		for i in range(self.m):
 			for j in range(self.ylength):
 				B[i][j] = int(input("Insert value into cell ("+i+","+j+")"))
-		print("Insert 1 if you want to maximize leader function, 0 to minimize")
-		self.max1 = int(input())
-		while(self.max1 != 0 and self.max1 != 1):
-			print("Wrong number inserted. Please repeat")
-			self.max1 = int(input())
-		print("Insert 1 if you want to maximize follower function, 0 to minimize")
-		self.max2 = int(input())
-		while(self.max2 != 0 and self.max2 != 1):
-			print("Wrong number inserted. Please repeat")
-			self.max2 = int(input())
-		self.ubound = 1000
+		self.ubound = 100000 #upper bound for parameter optimization
+
 
 	def __init__(self,root):
 		#this part works only with a properly defined xml file passed as input. It is the constructor to use for testing
@@ -74,7 +66,7 @@ class LQBP:
 		B3r = root.xpath('//app/B/thirdrow/cell/text()')
 		B4r = root.xpath('//app/B/fourthrow/cell/text()')
 		self.B = [B1r,B2r,B3r,B4r]
-		self.max1 = root.xpath('//app/max1/cell/text()') #1: maximization prob, 2: minimization prob
+		self.max1 = root.xpath('//app/max1/cell/text()') #1: maximization prob, 0: minimization prob
 		self.max2 = root.xpath('//app/max2/cell/text()')
 		#conversion to int
 
@@ -110,19 +102,42 @@ class LQBP:
 		self.Q = np.array(self.Q)
 		self.max1 = int(self.max1)
 		self.max2 = int(self.max2)
-		self.ubound = 1000
+		self.ubound = 100000 #upper bound for parameters of optimization
 
-	def get_feasible(chrm): #input: chromosome
-		u = np.zeros(self.m)
-		w = np.zeros(self.m)
-		v = np.zeros(self.ylength)
-		uzeros = np.array([]) #0: the corresponding u value must be 0. 1: the corresponding u value must be >= 0
-		wzeros = np.array([]) #same
-		vzeros = np.array([]) #same
-		yzeros = np.array([]) #same
+	def get_feasible(self):
+		x = []
+		for i in range(self.xlength):
+			x.append(random.randint(0,self.ubound)) #take random positive x
+		w = []
+		u = []
+		v = []
+		y = []
 		for i in range(self.m):
-			uzeros = np.append(uzeros,[0 if chrm[i]==0 else 1])
-			wzeros = np.append(wzeros,[1 if chrm[i]==0 else 0])
+			w.append(0)
+		for i in range(self.m):
+			u.append(0)
 		for i in range(self.ylength):
-			vzeros = np.append(vzeros,[0 if chrm[self.m+i]==0 else 1])
-			yzeros = np.append(yzeros,[1 if chrm[self.m+i]==0 else 0])
+			v.append(0)
+		for i in range(self.ylength):
+			y.append(0)
+
+		while(!self.end_comp(w,u,v,y)):
+			feasible = self.check(x,y,w,u,v)
+			w,u,v,y = self.next(w,u,v,y)
+		return x,y
+
+	def end_comp(self,w,u,v,y):
+		end = True
+		for i in range(len(w)):
+			if w[i] != self.ubound:
+				end = False
+		for i in range(len(u)):
+			if u[i] != self.ubound:
+				end = False
+		for i in range(len(v)):
+			if v[i] != self.ubound:
+				end = False
+		for i in range(len(y):
+			if y[i] != self.ubound:
+				end = False
+		return end
