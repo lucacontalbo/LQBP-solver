@@ -41,4 +41,4 @@ class Genetic:
 				self.population = np.append(self.population,tmp,axis=0)
 				i += 1
 		self.population = self.population.reshape(self.population_size,-1)
-		#self.lqbp.get_feasible(self.population[0])
+		self.lqbp.get_feasible(self.population[0])

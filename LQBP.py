@@ -143,6 +143,20 @@ class LQBP:
 		Q0 = self.get_submatr(self.Q,len(self.Q)-self.ylength,len(self.Q)-self.ylength,self.ylength,self.ylength)
 		Q1 = self.get_submatr(self.Q,self.xlength,0,self.ylength,self.xlength)
 		Q0 = self.delete_mcol(Q0,yzeros)
+		"""
+		print("uzeros",uzeros)
+		print("wzeros",wzeros)
+		print("vzeros",vzeros)
+		print("y",y)
+		print("b",self.b)
+		print("B",self.B)
+		print("bfirst",bfirst)
+		print("Bfirst",Bfirst)
+		print("Bsecond",Bsecond)
+		print("Q",self.Q)
+		print("Q0",Q0)
+		print("Q1",Q1)
+		"""
 		while(not self.end_comp(u,w,v)):
 			val = self.simplex(x,u,w,v,y,bfirst,Bfirst,Bsecond,Q0,Q1) #TODO
 			if val != -1:
@@ -187,19 +201,28 @@ class LQBP:
 	def delete_mcol(self,m,l): #deletes a column based on if the corresponding value inside l is 1 or 0 (0 -> delete)
 		if len(m) > 0 and len(m[0]) != len(l):
 			return -1 #len must be equal
-		b = np.empty([len(m),len(m[0])])
+		#b = np.empty([len(m),len(m[0])])
+		b = np.array([])
+		c=0
 		for i in range(len(m[0])):
 			if l[i] == 1:
-				b = np.hstack((b,np.atleast_2d(m[:,i]).T))
+				b = np.append(b,m[:,i])
+				c += 1
+		b = b.reshape(c,-1)
+		b = np.transpose(b)
 		return b
 
 	def delete_mrow(self,m,l): #deletes a row based on if the corresponding value inside l is 1 or 0 (0 -> delete)
 		if len(m) != len(l):
 			return -1
 		b = np.array([])
+		c = 0
 		for i in range(len(m)):
 			if l[i] == 1:
 				b = np.append(b,m[i,:])
+				c += 1
+		b = b.reshape(c,-1)
+		b = np.transpose(b)
 		return b
 
 
