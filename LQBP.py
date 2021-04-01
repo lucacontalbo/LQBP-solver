@@ -142,7 +142,6 @@ class LQBP:
 		Bsecond = self.delete_mrow(self.B,uzeros)
 		Q0 = self.get_submatr(self.Q,len(self.Q)-self.ylength,len(self.Q)-self.ylength,self.ylength,self.ylength)
 		Q1 = self.get_submatr(self.Q,self.xlength,0,self.ylength,self.xlength)
-		print("mcol",Q0)
 		Q0 = self.delete_mcol(Q0,yzeros)
 		while(not self.end_comp(u,w,v)):
 			val = self.simplex(x,u,w,v,y,bfirst,Bfirst,Bsecond,Q0,Q1) #TODO
@@ -186,8 +185,6 @@ class LQBP:
 		return b
 
 	def delete_mcol(self,m,l): #deletes a column based on if the corresponding value inside l is 1 or 0 (0 -> delete)
-		print(m)
-		print(l)
 		if len(m) > 0 and len(m[0]) != len(l):
 			return -1 #len must be equal
 		b = np.empty([len(m),len(m[0])])
@@ -215,7 +212,6 @@ class LQBP:
 
 	def end_comp(self,u,w,v): #when all slack variables reach a maximum, end the computation to avoid infinite computation
 		end = True
-		print(u,w,v,self.ubound)
 		for i in range(len(u)):
 			if u[i] != self.ubound:
 				end = False
