@@ -1,5 +1,6 @@
 import numpy as np
 import lxml.etree
+import random
 
 class LQBP:
 	def __init__(self):
@@ -108,16 +109,16 @@ class LQBP:
 		self.A = np.array(self.A)
 		self.B = np.array(self.B)
 		self.Q = np.array(self.Q)
-		self.max1 = int(self.max1)
-		self.max2 = int(self.max2)
+		self.max1 = int(self.max1[0])
+		self.max2 = int(self.max2[0])
 		self.ubound = 1000 #max value for variables. It can be changed
 
 	def get_feasible(self,chrm): #input: chromosome
 		x = np.array([])
-		uzeros = np.array([]) #0: the corresponding u value must be 0. 1: the corresponding u value must be >= 0
-		wzeros = np.array([]) #same
-		vzeros = np.array([]) #same
-		yzeros = np.array([]) #same
+		uzeros = np.array([],dtype=np.uint8) #0: the corresponding u value must be 0. 1: the corresponding u value must be >= 0
+		wzeros = np.array([],dtype=np.uint8) #same
+		vzeros = np.array([],dtype=np.uint8) #same
+		yzeros = np.array([],dtype=np.uint8) #same
 		for i in range(self.m):
 			uzeros = np.append(uzeros,[0 if chrm[i]==0 else 1])
 			wzeros = np.append(wzeros,[1 if chrm[i]==0 else 0])
@@ -128,7 +129,7 @@ class LQBP:
 		for i in range(self.xlength):
 			x = np.append(x,[random.randint(0,self.ubound)])
 
-		x,y,u,w,v = calculate(x,uzeros,wzeros,vzeros,yzeros)
+		x,y,u,w,v = self.calculate(x,uzeros,wzeros,vzeros,yzeros)
 		#TODO: parse y',u',w',v' in y,u,w,v
 
 	def calculate(self,x,uzeros,wzeros,vzeros,yzeros):
@@ -141,8 +142,9 @@ class LQBP:
 		Bsecond = self.delete_mrow(self.B,uzeros)
 		Q0 = self.get_submatr(self.Q,len(self.Q)-self.ylength,len(self.Q)-self.ylength,self.ylength,self.ylength)
 		Q1 = self.get_submatr(self.Q,self.xlength,0,self.ylength,self.xlength)
+		print("mcol",Q0)
 		Q0 = self.delete_mcol(Q0,yzeros)
-		while(!self.end_comp(u,w,v)):
+		while(not self.end_comp(u,w,v)):
 			val = self.simplex(x,u,w,v,y,bfirst,Bfirst,Bsecond,Q0,Q1) #TODO
 			if val != -1:
 				break
@@ -171,6 +173,7 @@ class LQBP:
 			for j in range(length2):
 				tmp = np.append(tmp,m[x+i][y+j])
 			mat = np.append(mat,tmp)
+		mat = mat.reshape(length1,-1)
 		return mat
 
 	def delete_l(self,a,l): #deletes a elements based on if the corresponding value inside list l is 1 or 0 (0 -> delete)
@@ -183,12 +186,14 @@ class LQBP:
 		return b
 
 	def delete_mcol(self,m,l): #deletes a column based on if the corresponding value inside l is 1 or 0 (0 -> delete)
+		print(m)
+		print(l)
 		if len(m) > 0 and len(m[0]) != len(l):
 			return -1 #len must be equal
-		b = np.array([])
+		b = np.empty([len(m),len(m[0])])
 		for i in range(len(m[0])):
 			if l[i] == 1:
-				b = np.append(b,m[:,i],axis=1)
+				b = np.hstack((b,np.atleast_2d(m[:,i]).T))
 		return b
 
 	def delete_mrow(self,m,l): #deletes a row based on if the corresponding value inside l is 1 or 0 (0 -> delete)
@@ -210,10 +215,14 @@ class LQBP:
 
 	def end_comp(self,u,w,v): #when all slack variables reach a maximum, end the computation to avoid infinite computation
 		end = True
-		for i in range(self.m):
-			if u[i] != self.ubound or w[i] != self.ubound:
+		print(u,w,v,self.ubound)
+		for i in range(len(u)):
+			if u[i] != self.ubound:
 				end = False
-		for i in range(self.ylength):
+		for i in range(len(w)):
+			if w[i] != self.ubound:
+				end = False
+		for i in range(len(v)):
 			if v[i] != self.ubound:
 				end = False
 		return end
