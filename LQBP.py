@@ -75,7 +75,7 @@ class LQBP:
 		B3r = root.xpath('//app/B/thirdrow/cell/text()')
 		B4r = root.xpath('//app/B/fourthrow/cell/text()')
 		self.B = [B1r,B2r,B3r,B4r]
-		self.max1 = root.xpath('//app/max1/cell/text()') #1: maximization prob, 2: minimization prob
+		self.max1 = root.xpath('//app/max1/cell/text()') #0: maximization prob, 1: minimization prob
 		self.max2 = root.xpath('//app/max2/cell/text()')
 		#conversion to int
 
@@ -136,18 +136,21 @@ class LQBP:
 		u = np.zeros(self.count_ones(uzeros))
 		w = np.zeros(self.count_ones(wzeros))
 		v = np.zeros(self.count_ones(vzeros))
-		y = np.array(self.count_ones(yzeros))
+		y = np.zeros(self.count_ones(yzeros))
 		bfirst = self.delete_l(self.b,yzeros)
 		Bfirst = self.delete_mcol(self.B,yzeros)
 		Bsecond = self.delete_mrow(self.B,uzeros)
 		Q0 = self.get_submatr(self.Q,len(self.Q)-self.ylength,len(self.Q)-self.ylength,self.ylength,self.ylength)
 		Q1 = self.get_submatr(self.Q,self.xlength,0,self.ylength,self.xlength)
 		Q0 = self.delete_mcol(Q0,yzeros)
-		"""
 		print("uzeros",uzeros)
 		print("wzeros",wzeros)
 		print("vzeros",vzeros)
+		print("yzeros",yzeros)
 		print("y",y)
+		print("u",u)
+		print("w",w)
+		print("v",v)
 		print("b",self.b)
 		print("B",self.B)
 		print("bfirst",bfirst)
@@ -156,7 +159,6 @@ class LQBP:
 		print("Q",self.Q)
 		print("Q0",Q0)
 		print("Q1",Q1)
-		"""
 		while(not self.end_comp(u,w,v)):
 			val = self.simplex(x,u,w,v,y,bfirst,Bfirst,Bsecond,Q0,Q1) #TODO
 			if val != -1:
@@ -208,8 +210,9 @@ class LQBP:
 			if l[i] == 1:
 				b = np.append(b,m[:,i])
 				c += 1
-		b = b.reshape(c,-1)
-		b = np.transpose(b)
+		if b.size != 0:
+			b = b.reshape(c,-1)
+			b = np.transpose(b)
 		return b
 
 	def delete_mrow(self,m,l): #deletes a row based on if the corresponding value inside l is 1 or 0 (0 -> delete)
@@ -221,8 +224,9 @@ class LQBP:
 			if l[i] == 1:
 				b = np.append(b,m[i,:])
 				c += 1
-		b = b.reshape(c,-1)
-		b = np.transpose(b)
+		if b.size != 0:
+			b = b.reshape(c,-1)
+			b = np.transpose(b)
 		return b
 
 
@@ -245,3 +249,62 @@ class LQBP:
 			if v[i] != self.ubound:
 				end = False
 		return end
+
+	def simplex(self,x,u,w,v,y,bfirst,Bfirst,Bsecond,Q0,Q1):
+		tableaut = self.create_tableaut(x,u,w,v,y,bfirst,Bfirst,Bsecond,Q0,Q1)
+
+		while self.pivot_col(tableaut) != -1:
+			#TODO
+
+
+	def create_tableaut(self,x,u,w,v,y,bfirst,Bfirst,Bsecond,Q0,Q1):
+		a = self.a
+		if self.max1 == 1: #turn minimization prob to maximization prob
+			a = -a
+			bfirst = -bfirst
+		tableaut = np.array([])
+		Ax = np.matmul(self.A,x)
+		rterm = self.r - Ax
+		rterm2 = -self.d - 2*np.matmul(Q1,x)
+		for i in range(len(Bfirst)):
+			tmp = np.append([],Bfirst[i,:])
+			for j in range(len(u)):
+				tmp = np.append(tmp,[0])
+			for j in range(len(w)):
+				tmp = np.append(tmp,[1])
+			for j in range(len(v)):
+				tmp = np.append(tmp,[0])
+			tmp = np.append(tmp,[0]) #z
+			tmp = np.append(tmp,rterm[i]) #result
+			tableaut = np.append(tableaut,tmp)
+
+		for i in range(len(Q0)):
+			tmp = np.append([],Q0[i,:])
+			tmp = 2*tmp
+			tmp = np.append(tmp,-Bsecond[i,:]) #?
+			for j in range(len(w)):
+				tmp = np.append(tmp,[0])
+			for j in range(len(v)):
+				if j<i:
+					tmp = np.append(tmp,[0])
+				elif j==i:
+					tmp = np.append(tmp,[1])
+				else:
+					tmp = np.append(tmp,[0])
+			tmp = np.append(tmp,[0]) #z
+			tmp = np.append(tmp,rterm2[i])
+			tableaut = np.append(tableaut,tmp)
+
+		print(tableaut.reshape([-1,len(y)+len(u)+len(w)+len(v)+2]))
+
+		mb = -bfirst
+
+		tmp = np.append([],mb)
+		for i in range(len(u)+len(w)+len(v)):
+			tmp = np.append(tmp,[0])
+		tmp = np.append(tmp,[1]) #z
+		ax = np.matmul(np.transpose(a),x)
+		tmp = np.append(tmp,ax)
+		tableaut = np.append(tableaut,tmp)
+		tableaut = tableaut.reshape([-1,len(y)+len(u)+len(w)+len(v)+2])
+		return tableaut
