@@ -143,6 +143,7 @@ class LQBP:
 		Q0 = self.get_submatr(self.Q,len(self.Q)-self.ylength,len(self.Q)-self.ylength,self.ylength,self.ylength)
 		Q1 = self.get_submatr(self.Q,self.xlength,0,self.ylength,self.xlength)
 		Q0 = self.delete_mcol(Q0,yzeros)
+		"""
 		print("uzeros",uzeros)
 		print("wzeros",wzeros)
 		print("vzeros",vzeros)
@@ -159,8 +160,9 @@ class LQBP:
 		print("Q",self.Q)
 		print("Q0",Q0)
 		print("Q1",Q1)
+		"""
 		while(not self.end_comp(u,w,v)):
-			val = self.simplex(x,u,w,v,y,bfirst,Bfirst,Bsecond,Q0,Q1) #TODO
+			val = self.simplex(x,u,w,v,y,bfirst,Bfirst,Bsecond,Q0,Q1)
 			if val != -1:
 				break
 			u,w,v = self.next(u,w,v)
@@ -252,12 +254,74 @@ class LQBP:
 
 	def simplex(self,x,u,w,v,y,bfirst,Bfirst,Bsecond,Q0,Q1):
 		tableaut = self.create_tableaut(x,u,w,v,y,bfirst,Bfirst,Bsecond,Q0,Q1)
-
+		pivot = 0
 		while self.pivot_col(tableaut) != -1:
-			#TODO
+			piv_col = self.pivot_col(tableaut) #piv is the most negative entry
+			ratio = self.get_ratio(tableaut,piv_col)
+			pivot = self.get_pivot(ratio)
+			if pivot == -1:
+				break
+			num = tableaut[pivot][piv_col]
+			for i in range(len(tableaut[0])):
+				tableaut[pivot][i] /= num #making pivot element equal to 1
+			for i in range(len(tableaut)):
+				for j in range(len(tableaut[i])):
+					if tableaut[i][piv_col] != 0 and i != pivot:
+						tableaut[i][j] -= tableau[i][piv_col]*tableaut[pivot][j]
+		if pivot == -1:
+			pass
+			#TODO: manage failing case
+		else:
+			return self.get_y(tableaut,y)
+
+	def get_y(self,tableaut,y):
+		for i in range(len(y)):
+			if self.basic(tableaut[:,i]):
+				y[i] = 0
+			else:
+				tmp = tableaut[:,i]
+				for j in range(len(tmp)):
+					if tmp[j] == 1:
+						y[i] = tableaut[j][-1]
+		return y
+
+	def basic(self,l):
+		c = 0
+		for o in l:
+			if o != 0 and o == 1:
+				c += 1
+			elif o != 0 and o != 1:
+				c = -1 #non basic
+		return c == 1
+
+	def get_pivot(self,ratio): #get lowest non negative ratio
+		min = float("inf")
+		pos = -1
+		for i in range(len(ratio)):
+			if min > ratio[i] and ratio[i] > 0:
+				min = ratio[i]
+				pos = i
+		return pos
+
+	def pivot_col(self,tableaut): #here the last value of the last row (free variable) is not considered. TODO: check this
+		min = 0
+		pos = -1
+		for i in range(len(tableaut[-1])-1):
+			if tableaut[-1][i] < min:
+				min = tableaut[-1][i]
+				pos = i
+		return pos
+
+	def get_ratio(self,tableaut,piv_col): #returns a list containing the ratios of the pivot column
+		num = len(tableaut)
+		l = np.array([])
+		for i in range(num-1):
+			l.append(tableaut[i][-1]/tableaut[i][piv_col])
+		return l
 
 
 	def create_tableaut(self,x,u,w,v,y,bfirst,Bfirst,Bsecond,Q0,Q1):
+		#y1 y2 ... yn2 u1 u2 .. um w1 w2 .. wm v1 v2 .. vn2 z   rem
 		a = self.a
 		if self.max1 == 1: #turn minimization prob to maximization prob
 			a = -a
