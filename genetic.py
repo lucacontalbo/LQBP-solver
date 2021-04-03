@@ -2,6 +2,7 @@ from LQBP import LQBP
 import numpy as np
 import lxml.etree
 import random
+import pandas as pd
 
 class Genetic:
 	def __init__(self):
@@ -28,7 +29,8 @@ class Genetic:
 
 
 		self.lqbp = LQBP(root)
-		self.population = np.array([], dtype = np.uint8)
+		#self.population = np.array([], dtype = np.uint8)
+		self.population = {}
 		self.create_population()
 
 	def create_population(self): #function to be called to create generation 0 of chromosomes
@@ -37,13 +39,24 @@ class Genetic:
 			tmp = np.array([],dtype=np.uint8)
 			for j in range(self.lqbp.m+self.lqbp.ylength):
 				tmp = np.append(tmp,[random.randint(0,1)])
-			if tmp not in self.population:
-				self.population = np.append(self.population,tmp,axis=0)
-				i += 1
-		self.population = self.population.reshape(self.population_size,-1)
-		self.lqbp.get_feasible(self.population[0])
+			if tuple(tmp) not in self.population.keys():
+				x,y = self.lqbp.get_feasible(tmp)
+				if isinstance(y,(list,pd.core.series.Series,np.ndarray)):
+					#self.population = np.append(self.population,tmp,axis=0)
+					#self.population = self.population.reshape(self.population_size,-1)
+					self.population[tuple(tmp)] = (x,y) #store chromosomes in dict as key, which has as value the solution found
+					i += 1
+		#self.population = self.population.reshape(self.population_size,-1)
+		self.debug_pop()
 
-	
+	def debug_pop(self):
+		for k,v in self.population.items():
+			tmp = list(k)
+			#tmp = tmp.reshape(-1,self.lqbp.m+self.lqbp.ylength)
+			print(tmp, end="->")
+			print(v)
+
+	"""
 	def calculating_pop_fitness(self,equation_inputs,pop): #calculating the fitness value for each solution in the current population
   		fitness=np.sum(pop*equation_inputs,axis=1)
   		return fitness
@@ -72,3 +85,4 @@ class Genetic:
         	random_value = numpy.random.uniform(-1.0, 1.0, 1)
         	offspring_crossover[idx, 4] = offspring_crossover[idx, 4] + random_value
     	return offspring_crossover
+"""
