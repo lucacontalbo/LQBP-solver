@@ -56,33 +56,48 @@ class Genetic:
 			print(tmp, end="->")
 			print(v)
 
-	"""
-	def calculating_pop_fitness(self,equation_inputs,pop): #calculating the fitness value for each solution in the current population
-  		fitness=np.sum(pop*equation_inputs,axis=1)
-  		return fitness
+# TODO best_chromosome_for_mating,crossover,mutation
+	# fitness value is calculated by the simplex method to obtain the feasibility and fitness value of the chromosome
+	# Selecting the best individuals in the current generation as parents for producing the offspring of the next generation.
+	def best_chromosome_for_mating(self, new_population, fitness, num_parents_mating):
+		parents = np.empty((num_parents_mating, new_population.shape[1]))
+		for parent_num in range(num_parents_mating):
+        		max_fitness_idx = np.where(fitness == np.max(fitness))
+        		max_fitness_idx = max_fitness_idx[0][0]
+        		parents[num_parents_mating, :] = new_population[max_fitness_idx, :]
+        		fitness[max_fitness_idx] = -99999999999
+		return parents
 
-	def select_mating_pool(self,pop,fitness,num_parents):
-  		parents = np.empty((num_parents, pop.shape[1]))
-  		for parent_num in range(num_parents):
-    		max_fitness_idx=np.where(fitness==numpy.max(fitness))
-    		max_fitness_idx = max_fitness_idx[0][0]
-    		parents[parent_num, :] = pop[max_fitness_idx, :]
-    		fitness[max_fitness_idx] = -99999999999
-  		return parents
+	def crossover(self, parents, offspring_size, crossover_prob):
+			offspring = np.empty(offspring_size)
+			# crossover_point_prob - The point at which crossover takes place between two parents.
+			crossover_point = np.uint8(offspring_size[1]/2)
+			for k in range(offspring_size[0]):
+					parent1_idx = k % parents.shape[0]  # Index of the first parent to mate.
+					parent2_idx = (k+1) % parents.shape[0] # Index of the second parent to mate.
+					offspring[k, 0:crossover_point] = parents[parent1_idx, 0:crossover_point] # The new offspring will have its first half of its genes taken from the first parent.
+					offspring[k, crossover_point:] = parents[parent2_idx, crossover_point:] # The new offspring will have its second half of its genes taken from the second parent.
+			return offspring
 
-	def crossover(self,parents, offspring_size):
-    	offspring = numpy.empty(offspring_size) # The point at which crossover takes place between two parents. Usually it is at the center.
-   		crossover_point = numpy.uint8(offspring_size[1]/2)
-    	for k in range(offspring_size[0]):# Index of the first parent to mate.
-        	parent1_idx = k%parents.shape[0]# Index of the second parent to mate.
-        	parent2_idx = (k+1)%parents.shape[0] # The new offspring will have its first half of its genes taken from the first parent.
-        	offspring[k, 0:crossover_point] = parents[parent1_idx, 0:crossover_point]# The new offspring will have its second half of its genes taken from the second parent.
-        	offspring[k, crossover_point:] = parents[parent2_idx, crossover_point:]
-    	return offspring
+	def mutation(self,offspring_crossover,mutation_prob):# Mutation changes a single gene in each offspring randomly.
+		for idx in range(offspring_crossover.shape[0]):
+			offspring_crossover[idx, 4] = offspring_crossover[idx, 4] + mutation_prob #mutation prob is already defined
+		return offspring_crossover
 
-	def mutation(self,offspring_crossover):# Mutation changes a single gene in each offspring randomly.
-    	for idx in range(offspring_crossover.shape[0]):# The random value to be added to the gene.
-        	random_value = numpy.random.uniform(-1.0, 1.0, 1)
-        	offspring_crossover[idx, 4] = offspring_crossover[idx, 4] + random_value
-    	return offspring_crossover
-"""
+	def selection():
+		for generation in range(num_generations):
+			fitness=cal_pop_fitness(self,inputs_equation,new_population)
+			parents=select_mating_pool(self,new_population,fitness,self.population_size) # selecting the best parent in the population for matching
+			offspring_crossover=crossover(self,parents,offspring_size=(pop_size[0]-parents.shape[0],num_weights)) # generating the next generation
+			offspring_mutation=mutation(self,offspring_crossover) # Adding some variation to the offspring using mutation
+			new_population[0:parents.shape[0],:]=parents # creating the new popultion based on the parents and offspring
+			new_population[parents.shape[0]:,:]=offspring_mutation
+			print("Best result:",np.max(np.sum(new_population*inputs_equation,axis=1))) # The best result in the current iteration
+
+	def Termination():
+			# Getting the best solution after iterating all the generations
+			fitness=cal_pop_fitness(self,inputs_equation,new_population)
+			best_match=np.where(fitness==np.max(fitness))
+			print('Best Solution',new_population[best_match,:])
+			print('Best solution fitness',fitness[best_match])
+
