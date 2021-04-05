@@ -72,7 +72,7 @@ class Genetic:
 					offspring[selected_parents_indexes[i]] = list(parents[selected_parents_indexes[i]]
 					[:crossover_point]) + list(parents[selected_parents_indexes[0]]
 					[:crossover_point-1:-1])
-	return offspring
+			return offspring
 
 
 	def mutation(self,chrm,mutation_prob):
@@ -99,13 +99,4 @@ class Genetic:
 			return selectedChromosomes
 
 
-			"""
-    		fitness_sorted=chrm[fitness].sort()
-    		best=choice(self.population)
-			for i in range(self.population_size):
-    				cont=choice(self.population)
-					if(cont.fitness<best.fitness):
-    						best=cont
-			return best
-			"""
 
