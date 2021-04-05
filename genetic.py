@@ -29,8 +29,8 @@ class Genetic:
 
 
 		self.lqbp = LQBP(root)
-		#self.population = np.array([], dtype = np.uint8)
-		self.population = {}
+
+		self.population = {} #dict that stores chromosomes as keys, and as values it has [x,y,z], where x,y are arrays of the param of the optimal solution, z is the optimal solution
 		self.create_population()
 
 	def create_population(self): #function to be called to create generation 0 of chromosomes
@@ -40,16 +40,13 @@ class Genetic:
 			for j in range(self.lqbp.m+self.lqbp.ylength):
 				tmp = np.append(tmp,[random.randint(0,1)])
 			if tuple(tmp) not in self.population.keys():
-				x,y = self.lqbp.get_feasible(tmp)
-				if isinstance(y,(list,pd.core.series.Series,np.ndarray)):
-					#self.population = np.append(self.population,tmp,axis=0)
-					#self.population = self.population.reshape(self.population_size,-1)
-					self.population[tuple(tmp)] = (x,y) #store chromosomes in dict as key, which has as value the solution found
+				x,y,z = self.lqbp.get_feasible(tmp)
+				if isinstance(y,(list,pd.core.series.Series,np.ndarray)): #if the operation has not been successfull, y is -1, so it doesn't enter this if condition
+					self.population[tuple(tmp)] = (x,y,z) #store chromosomes in dict as key, which has as value the solution found
 					i += 1
-		#self.population = self.population.reshape(self.population_size,-1)
 		self.debug_pop()
 
-	def debug_pop(self):
+	def debug_pop(self): #function used only for debugging purposes
 		for k,v in self.population.items():
 			tmp = list(k)
 			#tmp = tmp.reshape(-1,self.lqbp.m+self.lqbp.ylength)

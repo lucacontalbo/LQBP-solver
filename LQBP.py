@@ -130,7 +130,7 @@ class LQBP:
 		for i in range(self.xlength):
 			x = np.append(x,[random.randint(0,self.ubound)])
 		print("chromosome:",chrm)
-		y = self.calculate(x,uzeros,wzeros,vzeros,yzeros)
+		y,z = self.calculate(x,uzeros,wzeros,vzeros,yzeros)
 		if isinstance(y,(list,pd.core.series.Series,np.ndarray)):
 			ynew = yzeros.copy()
 			tmp = 0
@@ -139,8 +139,8 @@ class LQBP:
 					ynew[i] *= y[tmp]
 					tmp += 1
 			y = ynew.copy()
-		print("result:",(x,y))
-		return x,y
+		print("result:",(x,y,z))
+		return x,y,z
 
 	def calculate(self,x,uzeros,wzeros,vzeros,yzeros):
 		u = np.zeros(self.count_ones(uzeros),dtype = np.int8)
@@ -175,13 +175,8 @@ class LQBP:
 		print("Q0",Q0)
 		print("Q1",Q1)
 		
-		#while(not self.end_comp(u,w,v)):
-		val = self.simplex(x,u,w,v,y,bfirst,Bfirst,Bsecond,Q0,Q1)
-		#if val != -1:
-		#	break
-		#u,w,v = self.next(u,w,v)
-		y = val
-		return y
+		y,z = self.simplex(x,u,w,v,y,bfirst,Bfirst,Bsecond,Q0,Q1)
+		return y,z
 
 	def next(self,u,w,v):
 		found = False
@@ -207,7 +202,7 @@ class LQBP:
 		mat = mat.reshape(length1,-1)
 		return mat
 
-	def delete_l(self,a,l): #deletes a elements based on if the corresponding value inside list l is 1 or 0 (0 -> delete)
+	def delete_l(self,a,l): #deletes elements based on if the corresponding value inside list l is 1 or 0 (0 -> delete)
 		if len(a) != len(l):
 			return -1 #len must be equal
 		b = np.array([],dtype = np.int8)
@@ -285,26 +280,18 @@ class LQBP:
 			for i in range(len(tableaut)):
 				n = tableaut[i][piv_col].copy()
 				for j in range(len(tableaut[i])):
-					"""
-					if i==2:
-						print("---------")
-						print(tableaut[i][piv_col])
-						print(tableaut[pivot][j])
-						print(tableaut[i][j])
-					"""
 					if n != 0 and i != pivot:
 						tableaut[i][j] -= n*tableaut[pivot][j]
 		print("Tableaut end")
 		print(tableaut)
 		if pivot == -1:
 			return -1
-			#TODO: manage failing case
 		else:
-			return self.get_y(tableaut,y)
+			return self.get_y(tableaut,y), tableaut[-1][-1] #solution y and value of the function (tableaut[-1][-1])
 
 	def get_y(self,tableaut,y):
 		for i in range(len(y)):
-			if self.basic(tableaut[:,i]):
+			if not self.basic(tableaut[:,i]):
 				y[i] = 0
 			else:
 				tmp = tableaut[:,i]
@@ -316,10 +303,11 @@ class LQBP:
 	def basic(self,l):
 		c = 0
 		for o in l:
-			if o != 0 and o == 1:
+			if o == 1:
 				c += 1
 			elif o != 0 and o != 1:
 				c = -1 #non basic
+				break
 		return c == 1
 
 	def get_pivot(self,ratio): #get lowest non negative ratio
