@@ -3,6 +3,7 @@ import numpy as np
 import lxml.etree
 import random
 import pandas as pd
+from random import (choice, random, randint)
 
 class Genetic:
 	def __init__(self):
@@ -56,48 +57,55 @@ class Genetic:
 			print(tmp, end="->")
 			print(v)
 
-# TODO best_chromosome_for_mating,crossover,mutation
-	# fitness value is calculated by the simplex method to obtain the feasibility and fitness value of the chromosome
-	# Selecting the best individuals in the current generation as parents for producing the offspring of the next generation.
-	def best_chromosome_for_mating(self, new_population, fitness, num_parents_mating):
-		parents = np.empty((num_parents_mating, new_population.shape[1]))
-		for parent_num in range(num_parents_mating):
-        		max_fitness_idx = np.where(fitness == np.max(fitness))
-        		max_fitness_idx = max_fitness_idx[0][0]
-        		parents[num_parents_mating, :] = new_population[max_fitness_idx, :]
-        		fitness[max_fitness_idx] = -99999999999
-		return parents
+	def crossover(self,chrm,parents,self.crossover_prob):
+			chromosome_size = (np.shape(parents)[1])
+			row_size = np.shape(parents)[0] #creating new generations parents -> offsprings
+			offspring = np.copy(parents)
+			selected_parents_indexes=np.random.choice(list(range(row_size)),int(crossover_prob*row_size),replace=False)
+			crossover_point = int((np.shape(parents)[1])/2)
+			for i in range(len(selected_parents_indexes)):
+				if i!=len(selected_parents_indexes)-1:
+					offspring[selected_parents_indexes[i]] = list(parents[selected_parents_indexes[i]]
+					[:crossover_point]) + list(parents[selected_parents_indexes[i+1]]
+					[:crossover_point-1:-1])
+			else:
+					offspring[selected_parents_indexes[i]] = list(parents[selected_parents_indexes[i]]
+					[:crossover_point]) + list(parents[selected_parents_indexes[0]]
+					[:crossover_point-1:-1])
+	return offspring
 
-	def crossover(self, parents, offspring_size, crossover_prob):
-			offspring = np.empty(offspring_size)
-			# crossover_point_prob - The point at which crossover takes place between two parents.
-			crossover_point = np.uint8(offspring_size[1]/2)
-			for k in range(offspring_size[0]):
-					parent1_idx = k % parents.shape[0]  # Index of the first parent to mate.
-					parent2_idx = (k+1) % parents.shape[0] # Index of the second parent to mate.
-					offspring[k, 0:crossover_point] = parents[parent1_idx, 0:crossover_point] # The new offspring will have its first half of its genes taken from the first parent.
-					offspring[k, crossover_point:] = parents[parent2_idx, crossover_point:] # The new offspring will have its second half of its genes taken from the second parent.
-			return offspring
 
-	def mutation(self,offspring_crossover,mutation_prob):# Mutation changes a single gene in each offspring randomly.
-		for idx in range(offspring_crossover.shape[0]):
-			offspring_crossover[idx, 4] = offspring_crossover[idx, 4] + mutation_prob #mutation prob is already defined
-		return offspring_crossover
+	def mutation(self,chrm,mutation_prob):
+    		sampleList=np.random.choice(list(range(len(chrm)),int(mutation_prob*len(chrm)),replace=False))
+			for i in self.lqbp.chrm:
+    				self.lqbp.chrm[i]=self.lqbp.chrm[i]^1
+			return self.lqbp.chrm
 
-	def selection():
-		for generation in range(num_generations):
-			fitness=cal_pop_fitness(self,inputs_equation,new_population)
-			parents=select_mating_pool(self,new_population,fitness,self.population_size) # selecting the best parent in the population for matching
-			offspring_crossover=crossover(self,parents,offspring_size=(pop_size[0]-parents.shape[0],num_weights)) # generating the next generation
-			offspring_mutation=mutation(self,offspring_crossover) # Adding some variation to the offspring using mutation
-			new_population[0:parents.shape[0],:]=parents # creating the new popultion based on the parents and offspring
-			new_population[parents.shape[0]:,:]=offspring_mutation
-			print("Best result:",np.max(np.sum(new_population*inputs_equation,axis=1))) # The best result in the current iteration
+	def selection(self,chrm,self.population,fitness):
+			dictionary = {}
+			for i in chromosome:
+					dictionary.append(chromosome, fitness(chromosome))#calculate fitness value of all the chomosomes from sample
+			bestChromosomes_fitness_ascending=dict(sorted(dictionary.items(), key=lambda item: item[1]))  #sort from the dictionary top10 top8 top 12
+			selectedChromosomes = roulette_wheel_spin(bestChromosomes_fitness_ascending, self.population_size) #selected best chromosome based on wheel
+			def selectOne(self, bestChromosomes_fitness_ascending,population):
+				max = sum([c.bestChromosomes_fitness_ascending for c in population])
+				pick = random.uniform(0, max)
+				current = 0
+				for chromosome in population:
+					current += chromosome.bestChromosomes_fitness_ascending
+				if current > pick:
+				return chromosome
+			#these are chromosomes for next generation
+			return selectedChromosomes
 
-	def Termination():
-			# Getting the best solution after iterating all the generations
-			fitness=cal_pop_fitness(self,inputs_equation,new_population)
-			best_match=np.where(fitness==np.max(fitness))
-			print('Best Solution',new_population[best_match,:])
-			print('Best solution fitness',fitness[best_match])
+
+			"""
+    		fitness_sorted=chrm[fitness].sort()
+    		best=choice(self.population)
+			for i in range(self.population_size):
+    				cont=choice(self.population)
+					if(cont.fitness<best.fitness):
+    						best=cont
+			return best
+			"""
 
