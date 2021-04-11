@@ -129,7 +129,7 @@ class LQBP:
 
 		for i in range(self.xlength):
 			x = np.append(x,[random.randint(0,self.ubound)])
-		print("chromosome:",chrm)
+		#print("chromosome:",chrm)
 		y,z = self.calculate(x,uzeros,wzeros,vzeros,yzeros)
 		if isinstance(y,(list,pd.core.series.Series,np.ndarray)):
 			ynew = yzeros.copy()
@@ -139,7 +139,7 @@ class LQBP:
 					ynew[i] *= y[tmp]
 					tmp += 1
 			y = ynew.copy()
-		print("result:",(x,y,z))
+		#print("result:",(x,y,z))
 		return x,y,z
 
 	def calculate(self,x,uzeros,wzeros,vzeros,yzeros):
@@ -153,7 +153,8 @@ class LQBP:
 		Q0 = self.get_submatr(self.Q,len(self.Q)-self.ylength,len(self.Q)-self.ylength,self.ylength,self.ylength)
 		Q1 = self.get_submatr(self.Q,self.xlength,0,self.ylength,self.xlength)
 		Q0 = self.delete_mcol(Q0,yzeros)
-		print("----------------------- test ----------------------------")
+		#print("----------------------- test ----------------------------")
+		"""
 		print("uzeros",uzeros)
 		print("wzeros",wzeros)
 		print("vzeros",vzeros)
@@ -174,7 +175,7 @@ class LQBP:
 		print("Q",self.Q)
 		print("Q0",Q0)
 		print("Q1",Q1)
-		
+		"""
 		y,z = self.simplex(x,u,w,v,y,bfirst,Bfirst,Bsecond,Q0,Q1)
 		return y,z
 
@@ -264,14 +265,14 @@ class LQBP:
 	def simplex(self,x,u,w,v,y,bfirst,Bfirst,Bsecond,Q0,Q1):
 		tableaut = self.create_tableaut(x,u,w,v,y,bfirst,Bfirst,Bsecond,Q0,Q1)
 		pivot = 0
-		print("simplex")
+		#print("simplex")
 		while self.pivot_col(tableaut) != -1:
-			print("Tableaut:")
-			print(tableaut)
+			#print("Tableaut:")
+			#print(tableaut)
 			piv_col = self.pivot_col(tableaut) #piv is the most negative entry
 			ratio = self.get_ratio(tableaut,piv_col)
 			pivot = self.get_pivot(ratio)
-			print("pivot: (",pivot,",",piv_col,")")
+			#print("pivot: (",pivot,",",piv_col,")")
 			if pivot == -1:
 				break
 			num = tableaut[pivot][piv_col]
@@ -282,8 +283,8 @@ class LQBP:
 				for j in range(len(tableaut[i])):
 					if n != 0 and i != pivot:
 						tableaut[i][j] -= n*tableaut[pivot][j]
-		print("Tableaut end")
-		print(tableaut)
+		#print("Tableaut end")
+		#print(tableaut)
 		if pivot == -1:
 			return -1
 		else:

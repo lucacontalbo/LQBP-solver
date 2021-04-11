@@ -1,7 +1,7 @@
 from LQBP import LQBP
 import numpy as np
 import lxml.etree
-import random
+#import random
 import pandas as pd
 from random import (choice, random, randint)
 
@@ -13,9 +13,8 @@ class Genetic:
         self.max_generation = int(input("Insert max number of generations"))
         self.gen_counter = 0
         self.lqbp = LQBP()
-        self.not_feasible = np.empty((0,6), int)
-        self.population = np.array([]) #used to store the current population of chromosomes
-        self.create_population()
+        self.not_feasible = []
+        self.population = {}
 
     def __init__(self,path):
         with open(path) as f:
@@ -34,21 +33,15 @@ class Genetic:
 
         self.population = {} #dict that stores chromosomes as keys, and as values it has [x,y,z], where x,y are arrays of the param of the optimal solution, z is the optimal solution
         self.not_feasible = []
-        self.create_population()
 
     def create_population(self): #function to be called to create generation 0 of chromosomes
         i = 0
         while i<self.population_size:
             tmp = np.array([],dtype=np.uint8)
             for j in range(self.lqbp.m+self.lqbp.ylength):
-                tmp = np.append(tmp,[random.randint(0,1)])
-            if tuple(tmp) not in self.not_feasible:
-                x,y,z = self.lqbp.get_feasible(tmp)
-                if isinstance(y,(list,pd.core.series.Series,np.ndarray)): #if the operation has not been successfull, y is -1, so it doesn't enter this if condition
-                    self.population[tuple(tmp)] = (x,y,z) #store chromosomes in dict as key, which has as value the solution found
-                    i += 1
-                else:
-                    self.not_feasible.append(tuple(tmp)) #chromosome is not feasible
+                tmp = np.append(tmp,[randint(0,1)])
+            if self.get_feasible(tmp):
+                i += 1
         self.debug_pop()
 
     def debug_pop(self): #function used only for debugging purposes
@@ -60,14 +53,15 @@ class Genetic:
             
             #_CODE UPDATE STARTS HERE____________________________________________________________________________________________________________________________________
     #return 1D array of feasibility scores
-    def get_feasible(self):
-        x,y,z = self.lqbp.get_feasible(tmp)
-        if isinstance(y,(list,pd.core.series.Series,np.ndarray)): #if the operation has not been successfull, y is -1, so it doesn't enter this if condition
-             self.population[tuple(tmp)] = (x,y,z) #store chromosomes in dict as key, which has as value the solution found
-             i += 1
-        else:
-            self.not_feasible.append(tuple(tmp)) #chromosome is not feasible
-        print(x,y,z)
+    def get_feasible(self,tmp):
+        if tuple(tmp) not in self.not_feasible:
+        	x,y,z = self.lqbp.get_feasible(tmp)
+       		if isinstance(y,(list,pd.core.series.Series,np.ndarray)): #if the operation has not been successfull, y is -1, so it doesn't enter this if condition
+       			self.population[tuple(tmp)] = (x,y,z) #store chromosomes in dict as key, which has as value the solution found
+       			return 1
+        	else:
+        		self.not_feasible.append(tuple(tmp)) #chromosome is not feasible
+        return 0
         
         """print("fetching get_feasibility scores:")
         values = []
@@ -82,7 +76,7 @@ class Genetic:
         
     #1 updates the self.universal_chrm with new values
     def __main__(self):
-        for i in self.max_generation:
+        for i in range(self.max_generation):
             if i == 0:
                 self.create_population()
             else:
@@ -180,18 +174,18 @@ class Genetic:
     def check_nonfeasible_chrm(self):
         chrm = self.population
         approved_chrm = []
-          flag= False
+        flag= False
           #np.empty((0,6),int)
-          for i in chrm:
+        for i in chrm:
             flag = False 
             for j in self.not_feasible:
               if list(i) == list(j):
                 flag = True #copy is found, exit and dont append
             if flag == False:
               approved_chrm.append(i)
-          approved_chrm = np.reshape(approved_chrm, (len(approved_chrm), chrm.shape[0]))
-          print("approved_chrm", approved_chrm)
-          self.population=np.array(approved_chrm)
+        approved_chrm = np.reshape(approved_chrm, (len(approved_chrm), chrm.shape[0]))
+        print("approved_chrm", approved_chrm)
+        self.population=np.array(approved_chrm)
     
     def update_nonFeasible_list(waste_chrm): #the residual of the population is recieved here as np array, that will be merged with non_feasible
       if (self.not_feasible).size() == 0:
@@ -200,6 +194,7 @@ class Genetic:
         self.not_feasible = np.vstack((self.notfeasible_chrm, waste_chrm))
 
 
+"""
 
 chrm = np.random.randint(2, size=(6,6))
 
@@ -220,7 +215,7 @@ print("Now selection", chrm)
 chrm = g.selection(chrm)
 
 
-"""
+
 print('rows', chrm.shape[0])
 print('columns', chrm.shape[1])
 print(chrm[2])
