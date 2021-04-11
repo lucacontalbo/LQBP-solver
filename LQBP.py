@@ -286,7 +286,7 @@ class LQBP:
 		#print("Tableaut end")
 		#print(tableaut)
 		if pivot == -1:
-			return -1
+			return -1,-1
 		else:
 			return self.get_y(tableaut,y), tableaut[-1][-1] #solution y and value of the function (tableaut[-1][-1])
 
@@ -333,7 +333,9 @@ class LQBP:
 		num = len(tableaut)
 		l = np.array([])
 		for i in range(num-1):
-			l = np.append(l,[tableaut[i][-1]/tableaut[i][piv_col]])
+			if tableaut[i][piv_col] != 0:
+				l = np.append(l,[tableaut[i][-1]/tableaut[i][piv_col]])
+		#print(l)
 		return l
 
 

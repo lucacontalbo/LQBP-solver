@@ -42,9 +42,10 @@ class Genetic:
                 tmp = np.append(tmp,[randint(0,1)])
             if self.get_feasible(tmp):
                 i += 1
-        self.debug_pop()
+        self.show_population()
 
-    def debug_pop(self): #function used only for debugging purposes
+    def show_population(self): #function used to print the current population
+        print("Generation",self.gen_counter)
         for k,v in self.population.items():
             tmp = list(k)
             #tmp = tmp.reshape(-1,self.lqbp.m+self.lqbp.ylength)
@@ -76,14 +77,15 @@ class Genetic:
         
     #1 updates the self.universal_chrm with new values
     def __main__(self):
-        for i in range(self.max_generation):
-            if i == 0:
+        while self.gen_counter < self.max_generation:
+            if self.gen_counter == 0:
                 self.create_population()
             else:
                 self.crossover()
                 self.mutation()
                 self.selection()
-                
+            self.gen_counter += 1
+
         #it compares the chromosomes of current generation with the previous generation, returns the best chrm    
         
     '''if len(self.population_size) == 0:
