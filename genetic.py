@@ -162,13 +162,15 @@ class Genetic:
 
     def roulette_wheel_spin(self): #we have chromosomes as key and their fitness values as values
         chrm_dict = self.population
-        max_prob = 0    
-        for i in range(len(chrm_dict)):
+        max_prob = 0 
+        #print(chrm_dict,'\n' ,type(chrm_dict))
+        for i in chrm_dict:
+            print(i, chrm_dict[i], type(chrm_dict))
             max_prob += abs(chrm_dict[i][2])
             print(chrm_dict[i][2])
         print("Sum of all the feasible scores", max_prob)
         new_chrm = np.empty((0,6), int)
-        pick = random.uniform(0, max_prob)
+        pick = np.random.uniform(0, max_prob)
         current = 0
         
         for chromosome in chrm_dict:
