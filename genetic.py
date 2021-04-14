@@ -44,7 +44,7 @@ class Genetic:
                 tmp = np.append(tmp,[randint(0,1)])
             if self.get_feasible(tmp):
                 i += 1
-        self.show_population()
+        self.gen_counter += 1
 
     def show_population(self): #function used to print the current population
         print("Generation",self.gen_counter)
