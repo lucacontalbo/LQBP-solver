@@ -77,6 +77,7 @@ class Genetic:
     #1 updates the self.universal_chrm with new values
     def __main__(self):
         while self.gen_counter < self.max_generation:
+            self.show_population()
             if self.gen_counter == 0:
                 self.create_population()
                 self.show_population_matrix()
@@ -88,6 +89,7 @@ class Genetic:
                 self.selection()
                 self.show_population_matrix()
             self.gen_counter += 1
+        self.show_population()
 
         #it compares the chromosomes of current generation with the previous generation, returns the best chrm    
     

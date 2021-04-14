@@ -333,7 +333,9 @@ class LQBP:
 		num = len(tableaut)
 		l = np.array([])
 		for i in range(num-1):
-			if tableaut[i][piv_col] != 0:
+			if tableaut[i][piv_col] == 0 or tableaut[i][-1] == 0:
+				l = np.append(l,[0])
+			else:
 				l = np.append(l,[tableaut[i][-1]/tableaut[i][piv_col]])
 		#print(l)
 		return l
@@ -364,7 +366,10 @@ class LQBP:
 		for i in range(len(Q0)):
 			tmp = np.append([],Q0[i,:])
 			tmp = 2*tmp
-			tmp = np.append(tmp,-Bsecond[i,:]) #?
+			print("tmp",tmp)
+			print("Bsecond",Bsecond)
+			if len(Bsecond) != 0:
+				tmp = np.append(tmp,-Bsecond[i,:]) #?
 			for j in range(len(w)):
 				tmp = np.append(tmp,[0])
 			for j in range(len(v)):
