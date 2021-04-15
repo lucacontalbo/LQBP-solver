@@ -16,7 +16,7 @@ class Genetic:
         self.not_feasible = []
         self.population = {}
         self.population_matrix = np.empty((0,6), int)
-        
+
     def __init__(self,path):
         with open(path) as f:
             lines = f.readlines()
@@ -57,7 +57,7 @@ class Genetic:
         print("current population matrix is ")
         print(self.population_matrix)
         print("********************************************************")
-            
+
             #_CODE UPDATE STARTS HERE____________________________________________________________________________________________________________________________________
     #return 1D array of feasibility scores
     def get_feasible(self,tmp, check = False):
@@ -73,9 +73,13 @@ class Genetic:
             else:
                 self.not_feasible.append(tuple(tmp)) #chromosome is not feasible
         return 0
-        
+
     #1 updates the self.universal_chrm with new values
     def __main__(self):
+        self.create_population()
+        self.show_population()
+        self.sort_population()
+        """
         while self.gen_counter < self.max_generation:
             self.show_population()
             if self.gen_counter == 0:
@@ -88,27 +92,31 @@ class Genetic:
                 self.show_population_matrix()
                 self.selection()
                 self.show_population_matrix()
+                self.sort_population()
+                self.show_population_matrix()
             self.gen_counter += 1
         self.show_population()
+        """
 
-        #it compares the chromosomes of current generation with the previous generation, returns the best chrm    
-    
+
+        #it compares the chromosomes of current generation with the previous generation, returns the best chrm
+
     #2 prform crossover and update self.universal_chrm
     def crossover(self): #parents contains chromosomes here
         print("Performing crossover!")
         parents = self.population_matrix
         #print("Parents", parents)
-        
+
         chromosome_size = (self.population_matrix.shape[1])
         row_size = (self.population_matrix.shape[0]) #creating new generations parents -> offsprings // Here row size is handled by population
         offspring = np.copy(self.population_matrix)
         #print("Offprings are: ", '/n', offspring)
-        
+
         selected_parents_indexes=np.random.choice(list(range(row_size)),int(self.crossover_prob*row_size),replace=False)
         print("indexes of selected parents", selected_parents_indexes)
-        
+
         crossover_point = int(chromosome_size/2)
-        
+
         for i in range(len(selected_parents_indexes)):
             if i!=len(selected_parents_indexes)-1:
                 offspring[selected_parents_indexes[i]] = list(parents[selected_parents_indexes[i]]
@@ -118,7 +126,7 @@ class Genetic:
                 offspring[selected_parents_indexes[i]] = list(parents[selected_parents_indexes[i]]
                 [:crossover_point]) + list(parents[selected_parents_indexes[0]]
                 [:crossover_point-1:-1])
-        
+
         #print('Offsprings from crossover: ','\n', offspring)
         self.population_matrix = offspring
 
@@ -137,7 +145,7 @@ class Genetic:
         print("Chromosome after mutation: ", '\n', chrm)
         for i in chrm:
             self.get_feasible(i, True)
-    
+
     #step 6
     def selection(self):
         print("Perform selection now!")
@@ -146,25 +154,50 @@ class Genetic:
 #         chrm = np.array(list(self.population.keys()))
 #         print("the size of populations is ", chrm.shape[1])
 #         print(chrm, type(chrm))
-#         
+#
 #         #chrm = self.population_matrix
 #         dictionary = {}
 #         feasiblity_scores = self.get_feasible(chrm) #doubt
 #         print("feasibility score :", feasiblity_scores)
 #         for i in range(chrm.shape[0]):
 #             dictionary.update({i: feasiblity_scores[i]}) #calculate fitness value of all the chomosomes from sample
-#         
+#
 #         print("dictionary with feasinbility scores", '\n',dictionary)
 #         bestChromosomes_fitness_ascending = dict(sorted(dictionary.items(), key=lambda item: item[1]))  #sort from the dictionary top10 top8 top 12
 # =============================================================================
         self.population_matrix = self.roulette_wheel_spin() #selecting the chromosomes on basis of wheel
-        
+
         print("New Population matrix obtained!")
-        
+
+    def sort_population(self):
+        print("self.population.keys()", self.population.keys())
+        print("self.population.values()", self.population.values())
+        print(list(self.population.keys())[0])
+
+        sorted_x = sorted(self.population.values(), key=lambda values: values[2])
+        print(type(sorted_x))
+        print("**************************************************************")
+        print("sorted",sorted_x)
+        print("\n**************************************************************")
+        x={}
+        for i in sorted_x:
+            # print("Population values: ",[list(self.population.values()).index(i)])
+            j = []
+            for z in i:
+                j.append(list(z))
+            print(i[0], type(i[0]))
+
+            x[list(self.population.keys())[list(self.population.values()).index((j))]] = i
+            print(x)
+        return x
+
+
 
     def roulette_wheel_spin(self): #we have chromosomes as key and their fitness values as values
+        print("POPULATION xandie")
+        print(self.population)
         chrm_dict = self.population
-        max_prob = 0 
+        max_prob = 0
         #print(chrm_dict,'\n' ,type(chrm_dict))
         for i in chrm_dict:
             print(i, chrm_dict[i], type(chrm_dict))
@@ -174,7 +207,7 @@ class Genetic:
         new_chrm = np.empty((0,6), int)
         pick = np.random.uniform(0, max_prob)
         current = 0
-        
+
         for chromosome in chrm_dict:
             current += abs(chrm_dict[chromosome][2])
             if current > pick:
@@ -182,7 +215,7 @@ class Genetic:
         print("picking up new ones from roulette:", new_chrm)
         return new_chrm
         #these are chromosomes for next generation
-    
+
     #checks the feasibility of chrm and removes the not feasible ones from the current chromosomes
     def check_nonfeasible_chrm(self):
         chrm = self.population_matrix
@@ -190,7 +223,7 @@ class Genetic:
         flag= False
           #np.empty((0,6),int)
         for i in chrm:
-            flag = False 
+            flag = False
             for j in self.not_feasible:
               if list(i) == list(j):
                 flag = True #copy is found, exit and dont append
@@ -199,7 +232,7 @@ class Genetic:
         approved_chrm = np.reshape(approved_chrm, (len(approved_chrm), chrm.shape[0]))
         print("approved_chrm", approved_chrm)
         self.population_matrix=np.array(approved_chrm)
-    
+
     def update_nonFeasible_list(self, waste_chrm): #the residual of the population is recieved here as np array, that will be merged with non_feasible
       if (self.not_feasible).size() == 0:
         self.not_feasible = np.append(self.notfeasible_chrm, waste_chrm, axis=0)
