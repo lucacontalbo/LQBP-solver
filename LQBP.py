@@ -48,7 +48,7 @@ class LQBP:
 		while(self.max2 != 0 and self.max2 != 1):
 			print("Wrong number inserted. Please repeat")
 			self.max2 = int(input())
-		self.ubound = 50
+		self.ubound = 10
 
 	def __init__(self,root):
 		#this part works only with a properly defined xml file passed as input. It is the constructor to use for testing
@@ -112,7 +112,16 @@ class LQBP:
 		self.Q = np.array(self.Q, dtype = np.int8)
 		self.max1 = int(self.max1[0])
 		self.max2 = int(self.max2[0])
-		self.ubound = 50 #max value for variables. It can be changed
+		self.ubound = 10 #max value for variables. It can be changed
+
+		print("a",self.a)
+		print("b",self.b)
+		print("c",self.c)
+		print("d",self.d)
+		print("r",self.r)
+		print("A",self.A)
+		print("B",self.B)
+		print("Q",self.Q)
 
 	def get_feasible(self,chrm): #input: chromosome
 		x = np.array([],dtype = np.int8)
@@ -131,6 +140,7 @@ class LQBP:
 			x = np.append(x,[random.randint(0,self.ubound)])
 		#print("chromosome:",chrm)
 		y,z = self.calculate(x,uzeros,wzeros,vzeros,yzeros)
+		print("y in getfeasible",y)
 		if isinstance(y,(list,pd.core.series.Series,np.ndarray)):
 			ynew = yzeros.copy()
 			tmp = 0
@@ -143,6 +153,10 @@ class LQBP:
 		return x,y,z
 
 	def calculate(self,x,uzeros,wzeros,vzeros,yzeros):
+		self.uzeros = uzeros
+		self.wzeros = wzeros
+		self.vzeros = vzeros
+		self.yzeros = yzeros
 		u = np.zeros(self.count_ones(uzeros),dtype = np.int8)
 		w = np.zeros(self.count_ones(wzeros),dtype = np.int8)
 		v = np.zeros(self.count_ones(vzeros),dtype = np.int8)
@@ -154,7 +168,6 @@ class LQBP:
 		Q1 = self.get_submatr(self.Q,self.xlength,0,self.ylength,self.xlength)
 		Q0 = self.delete_mcol(Q0,yzeros)
 		#print("----------------------- test ----------------------------")
-		"""
 		print("uzeros",uzeros)
 		print("wzeros",wzeros)
 		print("vzeros",vzeros)
@@ -175,8 +188,8 @@ class LQBP:
 		print("Q",self.Q)
 		print("Q0",Q0)
 		print("Q1",Q1)
-		"""
 		y,z = self.simplex(x,u,w,v,y,bfirst,Bfirst,Bsecond,Q0,Q1)
+		print("end",y,z)
 		return y,z
 
 	def next(self,u,w,v):
@@ -264,13 +277,15 @@ class LQBP:
 
 	def simplex(self,x,u,w,v,y,bfirst,Bfirst,Bsecond,Q0,Q1):
 		tableaut = self.create_tableaut(x,u,w,v,y,bfirst,Bfirst,Bsecond,Q0,Q1)
-		pivot = 0
-		#print("simplex")
+		pivot = -1
+		print("simplex")
+		print("tableaut before: ",tableaut)
 		while self.pivot_col(tableaut) != -1:
-			#print("Tableaut:")
-			#print(tableaut)
+			print("Tableaut:")
+			print(tableaut)
 			piv_col = self.pivot_col(tableaut) #piv is the most negative entry
 			ratio = self.get_ratio(tableaut,piv_col)
+			print("ratio",ratio)
 			pivot = self.get_pivot(ratio)
 			#print("pivot: (",pivot,",",piv_col,")")
 			if pivot == -1:
@@ -283,8 +298,9 @@ class LQBP:
 				for j in range(len(tableaut[i])):
 					if n != 0 and i != pivot:
 						tableaut[i][j] -= n*tableaut[pivot][j]
-		#print("Tableaut end")
-		#print(tableaut)
+		print("Tableaut end")
+		print(tableaut)
+		print("pivot",pivot)
 		if pivot == -1:
 			return -1,-1
 		else:
@@ -344,10 +360,10 @@ class LQBP:
 	def create_tableaut(self,x,u,w,v,y,bfirst,Bfirst,Bsecond,Q0,Q1):
 		#y1 y2 ... yn2 u1 u2 .. um w1 w2 .. wm v1 v2 .. vn2 z   rem
 		a = self.a
-		if self.max1 == 1: #turn minimization prob to maximization prob
-			a = -a
-			bfirst = -bfirst
-		tableaut = np.array([],dtype = np.int8)
+		#if self.max1 == 1: #turn minimization prob to maximization prob
+		#	a = -a
+		#	bfirst = -bfirst
+		tableaut = np.array([])
 		Ax = np.matmul(self.A,x)
 		rterm = self.r - Ax
 		rterm2 = -self.d - 2*np.matmul(Q1,x)
@@ -356,7 +372,13 @@ class LQBP:
 			for j in range(len(u)):
 				tmp = np.append(tmp,[0])
 			for j in range(len(w)):
-				tmp = np.append(tmp,[1])
+				if j<i:
+					tmp = np.append(tmp,[0])
+				elif j==i:
+					tmp = np.append(tmp,[1])
+				else:
+					tmp = np.append(tmp,[0])
+
 			for j in range(len(v)):
 				tmp = np.append(tmp,[0])
 			tmp = np.append(tmp,[0]) #z
@@ -366,9 +388,10 @@ class LQBP:
 		for i in range(len(Q0)):
 			tmp = np.append([],Q0[i,:])
 			tmp = 2*tmp
-			print("tmp",tmp)
-			print("Bsecond",Bsecond)
 			if len(Bsecond) != 0:
+				#Bsecondtranspose = np.transpose(Bsecond)
+				#print("bsecondtranspose",Bsecondtranspose)
+				#print("u",u)
 				tmp = np.append(tmp,-Bsecond[i,:]) #?
 			for j in range(len(w)):
 				tmp = np.append(tmp,[0])
@@ -396,3 +419,37 @@ class LQBP:
 		tableaut = np.append(tableaut,tmp)
 		tableaut = tableaut.reshape([-1,len(y)+len(u)+len(w)+len(v)+2])
 		return tableaut
+
+
+	def create_tableaut2(self,x,Q0,Q1):
+		tableaut = np.array([])
+		Ax = np.matmul(self.A,x)
+		rterm = self.r - Ax
+		rterm2 = -self.d - 2*np.matmul(Q1,x)
+		for j in range(len(self.B)):
+			tmp = np.array([])
+			for i in range(len(self.B[j])):
+				tmp = np.append(tmp,self.B[j,i])
+			for i in range(len(self.uzeros)):
+				tmp = np.append(tmp,[0])
+			for i in range(len(self.wzeros)):
+				tmp = np.append(tmp,[1])
+			for i in range(len(self.vzeros)):
+				tmp = np.append(tmp,[0])
+			tmp = np.append(tmp,[0]) #z
+			tmp = np.append(tmp,rterm[j])
+			tableaut = np.append(tableaut,tmp)
+		for j in range(len(Q0)):
+			tmp = np.array([])
+			for i in range(len(Q0[j])):
+				tmp = np.append(tmp,2*Q0[j,i])
+			Btranspose = np.transpose(self.B)
+			for i in range(len(self.uzeros)):
+				tmp = np.append(tmp,-Btranspose[j,i])
+			for i in range(len(self.wzeros)):
+				tmp = np.append(tmp,[0])
+			for i in range(len(self.vzeros)):
+				tmp = np.append(tmp,[1])
+			tmp = np.append(tmp,rterm2[j])
+			tableaut = np.append(tableaut,tmp)
+		

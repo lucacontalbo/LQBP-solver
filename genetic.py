@@ -42,7 +42,7 @@ class Genetic:
             tmp = np.array([],dtype=np.uint8)
             for j in range(self.lqbp.m+self.lqbp.ylength):
                 tmp = np.append(tmp,[randint(0,1)])
-            if self.get_feasible(tmp):
+            if self.get_feasible(tmp, True):
                 i += 1
         self.gen_counter += 1
 
@@ -67,10 +67,12 @@ class Genetic:
             x,y,z = self.lqbp.get_feasible(tmp)
             if check == False:
                 self.population_matrix = np.vstack((self.population_matrix, tmp))
+            print("yyy",y)
             if isinstance(y,(list,pd.core.series.Series,np.ndarray)): #if the operation has not been successfull, y is -1, so it doesn't enter this if condition
                    self.population[tuple(tmp)] = (x,y,z) #store chromosomes in dict as key, which has as value the solution found
                    return 1
             else:
+                print("Not feasible",x)
                 self.not_feasible.append(tuple(tmp)) #chromosome is not feasible
         return 0
 
