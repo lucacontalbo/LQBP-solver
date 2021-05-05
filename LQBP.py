@@ -128,7 +128,7 @@ class LQBP:
 		uzeros = np.array([],dtype=np.int8) #0: the corresponding u value must be 0. 1: the corresponding u value must be >= 0
 		wzeros = np.array([],dtype=np.int8) #same
 		vzeros = np.array([],dtype=np.int8) #same
-		yzeros = np.array([],dtype=np.int8) #same
+		yzeros = np.array([]) #same
 		for i in range(self.m):
 			uzeros = np.append(uzeros,[0 if chrm[i]==0 else 1])
 			wzeros = np.append(wzeros,[1 if chrm[i]==0 else 0])
@@ -277,7 +277,7 @@ class LQBP:
 
 	def simplex(self,x,u,w,v,y,bfirst,Bfirst,Bsecond,Q0,Q1):
 		tableaut = self.create_tableaut(x,u,w,v,y,bfirst,Bfirst,Bsecond,Q0,Q1)
-		pivot = -1
+		pivot = 0
 		print("simplex")
 		print("tableaut before: ",tableaut)
 		while self.pivot_col(tableaut) != -1:
@@ -331,7 +331,7 @@ class LQBP:
 		min = float("inf")
 		pos = -1
 		for i in range(len(ratio)):
-			if min > ratio[i] and ratio[i] > 0:
+			if min >= ratio[i] and ratio[i] > 0:
 				min = ratio[i]
 				pos = i
 		return pos
@@ -367,15 +367,25 @@ class LQBP:
 		Ax = np.matmul(self.A,x)
 		rterm = self.r - Ax
 		rterm2 = -self.d - 2*np.matmul(Q1,x)
+		numtmp = 0
 		for i in range(len(Bfirst)):
 			tmp = np.append([],Bfirst[i,:])
 			for j in range(len(u)):
 				tmp = np.append(tmp,[0])
+			print("-a-")
+			added = False
 			for j in range(len(w)):
-				if j<i:
-					tmp = np.append(tmp,[0])
-				elif j==i:
+				#print(i,j)
+				#if j<i:
+				#	tmp = np.append(tmp,[0])
+				#elif j==i:
+				#	tmp = np.append(tmp,[1])
+				#else:
+				#	tmp = np.append(tmp,[0])
+				if self.wzeros[i] == 1 and j >= numtmp and added == False:
 					tmp = np.append(tmp,[1])
+					numtmp += 1
+					added = True
 				else:
 					tmp = np.append(tmp,[0])
 
@@ -385,6 +395,7 @@ class LQBP:
 			tmp = np.append(tmp,rterm[i]) #result
 			tableaut = np.append(tableaut,tmp)
 
+		numtmp = 0
 		for i in range(len(Q0)):
 			tmp = np.append([],Q0[i,:])
 			tmp = 2*tmp
@@ -395,13 +406,21 @@ class LQBP:
 				tmp = np.append(tmp,-Bsecond[i,:]) #?
 			for j in range(len(w)):
 				tmp = np.append(tmp,[0])
+			added = False
 			for j in range(len(v)):
-				if j<i:
-					tmp = np.append(tmp,[0])
-				elif j==i:
+				#if j<i:
+				#	tmp = np.append(tmp,[0])
+				#elif j==i:
+				#	tmp = np.append(tmp,[1])
+				#else:
+				#	tmp = np.append(tmp,[0])
+				if self.vzeros[i] == 1 and j >= numtmp and added == False:
 					tmp = np.append(tmp,[1])
+					numtmp += 1
+					added = True
 				else:
 					tmp = np.append(tmp,[0])
+
 			tmp = np.append(tmp,[0]) #z
 			tmp = np.append(tmp,rterm2[i])
 			tableaut = np.append(tableaut,tmp)
