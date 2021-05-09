@@ -297,14 +297,61 @@ class LQBP:
 				n = tableaut[i][piv_col].copy()
 				for j in range(len(tableaut[i])):
 					if n != 0 and i != pivot:
-						tableaut[i][j] -= n*tableaut[pivot][j]
+						tableaut[i][j] = tableaut[i][j] - n*tableaut[pivot][j]
+				tableaut[i,:] += 0 #to get rid of -0
 		print("Tableaut end")
 		print(tableaut)
 		print("pivot",pivot)
-		if pivot == -1:
+		if pivot == -1 or not self.check_slackvariables(y,u,w,v,tableaut) or len(y) == 0 or not self.check_unfeasibleeq(tableaut):
 			return -1,-1
 		else:
 			return self.get_y(tableaut,y), tableaut[-1][-1] #solution y and value of the function (tableaut[-1][-1])
+
+	def check_unfeasibleeq(self,tableaut):
+		feasible = True
+		for i in range(len(tableaut)):
+			row_feasible = False
+			for j in range(len(tableaut[i])-1):
+				print(tableaut[i][j])
+				if tableaut[i][j] != 0:
+					print("in")
+					row_feasible = True
+			if row_feasible == False and tableaut[i,-1] != 0:
+				feasible = False
+			print("row_feasible: ",row_feasible)
+		print("feasible: ",feasible)
+		return feasible
+
+	def check_slackvariables(self,y,u,w,v,tableaut):
+		feasible = True
+		base_column = 0
+		for i in range(base_column+len(y)):
+			if self.basic(tableaut[:,i]):
+				for j in range(len(tableaut)):
+					if tableaut[j,i] != 0 and tableaut[j,-1]/tableaut[j,i] < 0:
+						feasible = False
+		base_column += len(y)
+		for i in range(base_column+len(u)):
+			if self.basic(tableaut[:,i]):
+				for j in range(len(tableaut)):
+					if tableaut[j,i] != 0 and tableaut[j,-1]/tableaut[j,i] < 0:
+						feasible = False
+		base_column += len(u)
+		for i in range(base_column+len(w)):
+			if self.basic(tableaut[:,i]):
+				for j in range(len(tableaut)):
+					if tableaut[j,i] != 0 and tableaut[j,-1]/tableaut[j,i] < 0:
+						feasible = False
+		base_column += len(v)
+		for i in range(base_column+len(v)):
+			if self.basic(tableaut[:,i]):
+				for j in range(len(tableaut)):
+					if tableaut[j,i] != 0 and tableaut[j,-1]/tableaut[j,i] < 0:
+						feasible = False
+
+		return feasible
+
+
 
 	def get_y(self,tableaut,y):
 		for i in range(len(y)):
@@ -320,18 +367,15 @@ class LQBP:
 	def basic(self,l):
 		c = 0
 		for o in l:
-			if o == 1:
+			if o != 0:
 				c += 1
-			elif o != 0 and o != 1:
-				c = -1 #non basic
-				break
 		return c == 1
 
 	def get_pivot(self,ratio): #get lowest non negative ratio
 		min = float("inf")
 		pos = -1
 		for i in range(len(ratio)):
-			if min >= ratio[i] and ratio[i] > 0:
+			if min > ratio[i] and ratio[i] > 0:
 				min = ratio[i]
 				pos = i
 		return pos
@@ -376,12 +420,14 @@ class LQBP:
 			added = False
 			for j in range(len(w)):
 				#print(i,j)
-				#if j<i:
-				#	tmp = np.append(tmp,[0])
-				#elif j==i:
-				#	tmp = np.append(tmp,[1])
-				#else:
-				#	tmp = np.append(tmp,[0])
+				"""
+				if j<i:
+					tmp = np.append(tmp,[0])
+				elif j==i:
+					tmp = np.append(tmp,[1])
+				else:
+					tmp = np.append(tmp,[0])
+				"""
 				if self.wzeros[i] == 1 and j >= numtmp and added == False:
 					tmp = np.append(tmp,[1])
 					numtmp += 1
@@ -393,6 +439,8 @@ class LQBP:
 				tmp = np.append(tmp,[0])
 			tmp = np.append(tmp,[0]) #z
 			tmp = np.append(tmp,rterm[i]) #result
+			if rterm[i] < 0:
+				tmp = -tmp
 			tableaut = np.append(tableaut,tmp)
 
 		numtmp = 0
@@ -408,12 +456,14 @@ class LQBP:
 				tmp = np.append(tmp,[0])
 			added = False
 			for j in range(len(v)):
-				#if j<i:
-				#	tmp = np.append(tmp,[0])
-				#elif j==i:
-				#	tmp = np.append(tmp,[1])
-				#else:
-				#	tmp = np.append(tmp,[0])
+				"""
+				if j<i:
+					tmp = np.append(tmp,[0])
+				elif j==i:
+					tmp = np.append(tmp,[1])
+				else:
+					tmp = np.append(tmp,[0])
+				"""
 				if self.vzeros[i] == 1 and j >= numtmp and added == False:
 					tmp = np.append(tmp,[1])
 					numtmp += 1
@@ -423,9 +473,20 @@ class LQBP:
 
 			tmp = np.append(tmp,[0]) #z
 			tmp = np.append(tmp,rterm2[i])
+			if rterm2[i] < 0:
+				tmp = -tmp
 			tableaut = np.append(tableaut,tmp)
 
 		#print(tableaut.reshape([-1,len(y)+len(u)+len(w)+len(v)+2]))
+
+		"""for i in range(len(Bfirst)+len(u)+len(w)+len(v)):
+			tmp = np.array([])
+			for j in range(i):
+				tmp = np.append(tmp,[0])
+			tmp = np.append(tmp,[1])
+			for j in range(i+1,len(Bfirst)+len(u)+len(w)+len(v)+2):
+				tmp = tmp.append(tmp,[0])
+			tableaut = np.append(tableaut,tmp)"""
 
 		mb = -bfirst
 

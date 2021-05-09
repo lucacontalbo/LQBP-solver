@@ -63,17 +63,17 @@ class Genetic:
     def get_feasible(self,tmp, check = False):
         #print("current chromosome", type(tmp), '\n', tmp)
         #chrm = np.empty()
-        if tuple(tmp) not in self.not_feasible:
-            x,y,z = self.lqbp.get_feasible(tmp)
-            if check == False:
-                self.population_matrix = np.vstack((self.population_matrix, tmp))
-            print("yyy",y)
-            if isinstance(y,(list,pd.core.series.Series,np.ndarray)): #if the operation has not been successfull, y is -1, so it doesn't enter this if condition
-                   self.population[tuple(tmp)] = (x,y,z) #store chromosomes in dict as key, which has as value the solution found
-                   return 1
-            else:
-                print("Not feasible",x)
-                self.not_feasible.append(tuple(tmp)) #chromosome is not feasible
+        #if tuple(tmp) not in self.not_feasible:
+        x,y,z = self.lqbp.get_feasible(tmp)
+        if check == False:
+            self.population_matrix = np.vstack((self.population_matrix, tmp))
+        print("yyy",y)
+        if isinstance(y,(list,pd.core.series.Series,np.ndarray)): #if the operation has not been successfull, y is -1, so it doesn't enter this if condition
+               self.population[tuple(tmp)] = (x,y,z) #store chromosomes in dict as key, which has as value the solution found
+               return 1
+        else:
+               print("Not feasible",x)
+               self.not_feasible.append(tuple(tmp)) #chromosome is not feasible
         return 0
 
     #1 updates the self.universal_chrm with new values
