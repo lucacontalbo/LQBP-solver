@@ -48,7 +48,7 @@ class LQBP:
 		while(self.max2 != 0 and self.max2 != 1):
 			print("Wrong number inserted. Please repeat")
 			self.max2 = int(input())
-		self.ubound = 10
+		self.ubound = 20
 
 	def __init__(self,root):
 		#this part works only with a properly defined xml file passed as input. It is the constructor to use for testing
@@ -112,7 +112,7 @@ class LQBP:
 		self.Q = np.array(self.Q, dtype = np.int8)
 		self.max1 = int(self.max1[0])
 		self.max2 = int(self.max2[0])
-		self.ubound = 10 #max value for variables. It can be changed
+		self.ubound = 20 #max value for variables. It can be changed
 
 		print("a",self.a)
 		print("b",self.b)
