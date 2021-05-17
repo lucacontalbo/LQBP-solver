@@ -8,7 +8,7 @@ from random import (choice, random, randint)
 class Genetic:
     def __init__(self):
         self.population_size = int(input("Insert population size"))
-        self.crossover_prob = int(input("Insert crossover probability"))
+        self.create_populationrossover_prob = int(input("Insert crossover probability"))
         self.mutation_prob = int(input("Insert mutation probability"))
         self.max_generation = int(input("Insert max number of generations"))
         self.gen_counter = 0
@@ -29,10 +29,7 @@ class Genetic:
         self.max_generation = int(root.xpath('//app/maxgeneration/cell/text()')[0])
         self.gen_counter = 0
         self.population_matrix = np.empty((0,6), int)
-
-
         self.lqbp = LQBP(root)
-
         self.population = {} #dict that stores chromosomes as keys, and as values it has [x,y,z], where x,y are arrays of the param of the optimal solution, z is the optimal solution
         self.not_feasible = []
 
@@ -45,6 +42,7 @@ class Genetic:
             if self.get_feasible(tmp, True):
                 i += 1
         self.gen_counter += 1
+        self.population_matrix = np.asarray(list(self.population.keys()))
 
     def show_population(self): #function used to print the current population
         print("Generation",self.gen_counter)
@@ -53,6 +51,7 @@ class Genetic:
             #tmp = tmp.reshape(-1,self.lqbp.m+self.lqbp.ylength)
             print(tmp, end="->")
             print(v)
+            
     def show_population_matrix(self):
         print("current population matrix is ")
         print(self.population_matrix)
@@ -79,9 +78,9 @@ class Genetic:
     #1 updates the self.universal_chrm with new values
     def __main__(self):
         self.create_population()
-        self.show_population()
-        self.sort_population()
-        """
+        #self.show_population()
+        #self.sort_population()
+        
         while self.gen_counter < self.max_generation:
             self.show_population()
             if self.gen_counter == 0:
@@ -95,12 +94,9 @@ class Genetic:
                 self.selection()
                 self.show_population_matrix()
                 self.sort_population()
-                self.show_population_matrix()
+                # self.show_population_matrix()
             self.gen_counter += 1
         self.show_population()
-        """
-
-
         #it compares the chromosomes of current generation with the previous generation, returns the best chrm
 
     #2 prform crossover and update self.universal_chrm
@@ -129,7 +125,8 @@ class Genetic:
                 [:crossover_point]) + list(parents[selected_parents_indexes[0]]
                 [:crossover_point-1:-1])
 
-        #print('Offsprings from crossover: ','\n', offspring)
+        # print('Offsprings from crossover: ','\n', offspring)
+        # print('Offsprings from crossover: ','\n', self.population)
         self.population_matrix = offspring
 
 
@@ -144,9 +141,10 @@ class Genetic:
         for i in sampleList:
             for j in range(len(chrm[0])): #edit
                 chrm[i][j] = chrm[i][j]^1
-        print("Chromosome after mutation: ", '\n', chrm)
+        print("Chromosome after mutation: ", '\n', chrm, '\n',"existing chrms are:", '\n', self.population)
         for i in chrm:
             self.get_feasible(i, True)
+        self.population_matrix = chrm
 
     #step 6
     def selection(self):
@@ -169,28 +167,53 @@ class Genetic:
 # =============================================================================
         self.population_matrix = self.roulette_wheel_spin() #selecting the chromosomes on basis of wheel
 
-        print("New Population matrix obtained!")
+        print("New Population matrix obtained!", '\n', "existing pop is: ", self.population)
 
     def sort_population(self):
-        print("self.population.keys()", self.population.keys())
-        print("self.population.values()", self.population.values())
-        print(list(self.population.keys())[0])
+        # self.universal_population.update(self.population)
+        # self.universal_population = sorted(self.universal_population.items(), key = lambda e:e[1][2])
+        # print("self.universal_population", self.universal_population)
+        
+        print('Starting sort population')
+        current_matrix = self.population_matrix
+        #print(self.population_matrix)
+        #print(self.show_population())
+        i = np.shape(current_matrix)[0]-1
+        while i>=0:
+            print('inside')
+            print(tuple(current_matrix[i]), list(self.population.keys()))
+            if tuple(current_matrix[i]) in list(self.population.keys()):
+                print('clashing common chrm found', i)
+                current_matrix = np.delete(current_matrix, i, 0)
+            i-=1
+        print("new matrix after removing duplicates", current_matrix)
+        
+        sorted_x = sorted(self.population.items(), key = lambda e:e[1][2])
+        #sorted_x = list(self.population.items())
+        # print(type(sorted_x))
+        print("************************sorted**************************************")
+        for i in range(len(sorted_x)):
+            print(sorted_x[i])
+            
+        print("\n**************************************************************")        
+        for i in range(len(sorted_x)):
+            print( list(sorted_x[i][0]), end = '\n')
+            print(sorted_x[i][1], end = '\n')
+            self.universal_population[(sorted_x[i][0])]= sorted_x[i][1]
+# =============================================================================
+#             if list(sorted_x[i][0]) in list(self.universal_population.keys()) and len(self.universal_population.keys()) !=0:
+#                 print('found')
+#                 del sorted_x[i]
+#             else:
+# =============================================================================
 
-        sorted_x = sorted(self.population.values(), key=lambda values: values[2])
-        print(type(sorted_x))
-        print("**************************************************************")
-        print("sorted",sorted_x)
-        print("\n**************************************************************")
-        x={}
-        for i in sorted_x:
-            # print("Population values: ",[list(self.population.values()).index(i)])
-            j = []
-            for z in i:
-                j.append(list(z))
-            print(i[0], type(i[0]))
-
-            x[list(self.population.keys())[list(self.population.values()).index((j))]] = i
-            print(x)
+        print("\n************************universal population**************************************")
+        print("latest sorted list", self.universal_population)
+        
+        
+        # for i in range(len(self.population)):
+        #     if self.population.values()[]
+        x = sorted(self.universal_population.items(), key = lambda e:e[1][2])
         return x
 
 
@@ -198,7 +221,7 @@ class Genetic:
     def roulette_wheel_spin(self): #we have chromosomes as key and their fitness values as values
         print("POPULATION xandie")
         print(self.population)
-        chrm_dict = self.population
+        chrm_dict = self.population_matrix
         max_prob = 0
         #print(chrm_dict,'\n' ,type(chrm_dict))
         for i in chrm_dict:
@@ -207,13 +230,14 @@ class Genetic:
             print(chrm_dict[i][2])
         print("Sum of all the feasible scores", max_prob)
         new_chrm = np.empty((0,6), int)
-        pick = np.random.uniform(0, max_prob)
         current = 0
-
-        for chromosome in chrm_dict:
-            current += abs(chrm_dict[chromosome][2])
-            if current > pick:
-                new_chrm = np.vstack((new_chrm, chromosome))
+        while np.shape(new_chrm)[0]<8: #ensures we get at least 4 chrms out of this population
+            for chromosome in chrm_dict:
+                current += abs(chrm_dict[chromosome][2])
+                pick = np.random.uniform(0, max_prob)
+                print("current  & Pick is: ", current, pick)
+                if current > pick:
+                    new_chrm = np.vstack((new_chrm, chromosome))
         print("picking up new ones from roulette:", new_chrm)
         return new_chrm
         #these are chromosomes for next generation
