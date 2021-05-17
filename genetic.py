@@ -64,9 +64,11 @@ class Genetic:
         x,y,z = self.lqbp.get_feasible(tmp)
         #if tmp not in self.not_feasible:
         if isinstance(y,(list,pd.core.series.Series,np.ndarray)): #if the operation has not been successfull, y is -1, so it doesn't enter this if condition
-               if tuple(tmp) not in self.population.keys() or self.population[tuple(tmp)][2] < z:
+               if tuple(tmp) not in self.population.keys():
                    self.population[tuple(tmp)] = (x,y,z) #store chromosomes in dict as key, which has as value the solution found
-               return 1
+                   return 1
+               elif self.population[tuple(tmp)][2] < z:
+                   self.population[tuple(tmp)] = (x,y,z)
         else:
                print("Not feasible",x)
                self.not_feasible.append(tuple(tmp)) #chromosome is not feasible
@@ -91,6 +93,7 @@ class Genetic:
               self.mutation(new_gen)
               self.get_fitness(new_gen)
               self.selection()
+              self.gen_counter += 1
         print("Best solution found:", self.best_chrm)
 
     def pop_random(self,lst):
@@ -155,36 +158,22 @@ class Genetic:
     #step 6
     def selection(self):
         self.population = self.sort_population()
+        print("population conta")
+        print(self.population)
+        print("population size conta")
+        print(self.population_size)
+        print("real pop size")
+        print(len(self.population))
         new_population = {}
         sum = 0
 
-        for i in range(len(self.population_size)):
+        for i in range(self.population_size):
               tmp = self.roulette_wheel_spin()
               new_population[tmp[0]] = (tmp[1],tmp[2],tmp[3])
         self.population = new_population
 
     def sort_population(self):
-        print("self.population.keys()", self.population.keys())
-        print("self.population.values()", self.population.values())
-        print(list(self.population.keys())[0])
-
-        sorted_x = sorted(self.population.values(), key=lambda values: values[2])
-        print(type(sorted_x))
-        print("**************************************************************")
-        print("sorted",sorted_x)
-        print("\n**************************************************************")
-        x={}
-        for i in sorted_x:
-            # print("Population values: ",[list(self.population.values()).index(i)])
-            j = []
-            for z in i:
-                j.append(list(z))
-            print(i[0], type(i[0]))
-
-            x[list(self.population.keys())[list(self.population.values()).index((j))]] = i
-            print(x)
-        return x
-
+        return {k:v for k,v in sorted(self.population.items(), key=lambda item: item[1][2], reverse=True)}
 
 
     def roulette_wheel_spin(self): #we have chromosomes as key and their fitness values as values
@@ -198,17 +187,17 @@ class Genetic:
             max_prob += abs(chrm_dict[i][2])
             print(chrm_dict[i][2])
         print("Sum of all the feasible scores", max_prob)
-        new_chrm = {}
+        new_chrm = ()
         pick = np.random.uniform(0, max_prob)
         current = 0
-
+        print(max_prob)
         for chromosome in chrm_dict:
             current += abs(chrm_dict[chromosome][2])
             if current > pick:
                 new_chrm = (chromosome,chrm_dict[chromosome][0],chrm_dict[chromosome][1],chrm_dict[chromosome][2])
-                self.population.pop(chromosome, None)
-
+                #self.population.pop(chromosome, None)
         print("picking up new ones from roulette:", new_chrm)
+        self.population.pop(new_chrm[0],None)
         return new_chrm
         #these are chromosomes for next generation
 
