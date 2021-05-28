@@ -123,8 +123,7 @@ class LQBP:
 		print("B",self.B)
 		print("Q",self.Q)
 
-	def get_feasible(self,chrm): #input: chromosome
-		x = np.array([],dtype = np.int8)
+	def get_feasible(self,chrm,x=[]): #input: chromosome
 		uzeros = np.array([],dtype=np.int8) #0: the corresponding u value must be 0. 1: the corresponding u value must be >= 0
 		wzeros = np.array([],dtype=np.int8) #same
 		vzeros = np.array([],dtype=np.int8) #same
@@ -136,8 +135,10 @@ class LQBP:
 			vzeros = np.append(vzeros,[0 if chrm[self.m+i]==0 else 1])
 			yzeros = np.append(yzeros,[1 if chrm[self.m+i]==0 else 0])
 
-		for i in range(self.xlength):
-			x = np.append(x,[random.randint(0,self.ubound)])
+		if len(x)==0:
+			x = np.array([],dtype = np.int8)
+			for i in range(self.xlength):
+				x = np.append(x,[random.randint(0,self.ubound)])
 		#print("chromosome:",chrm)
 		y,z = self.calculate(x,uzeros,wzeros,vzeros,yzeros)
 		print("y in getfeasible",y)

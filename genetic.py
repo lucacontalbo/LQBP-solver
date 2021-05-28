@@ -62,8 +62,8 @@ class Genetic:
 
     def get_feasible(self,tmp):
         x,y,z = self.lqbp.get_feasible(tmp)
-        #if tmp not in self.not_feasible:
-        if isinstance(y,(list,pd.core.series.Series,np.ndarray)): #if the operation has not been successfull, y is -1, so it doesn't enter this if condition
+        #if tuple(x) not in self.not_feasible:
+        if isinstance(y,(list,pd.core.series.Series,np.ndarray)) and z <= 20: #if the operation has not been successfull, y is -1, so it doesn't enter this if condition
                if tuple(tmp) not in self.population.keys():
                    self.population[tuple(tmp)] = (x,y,z) #store chromosomes in dict as key, which has as value the solution found
                    return 1
@@ -71,7 +71,7 @@ class Genetic:
                    self.population[tuple(tmp)] = (x,y,z)
         else:
                print("Not feasible",x)
-               self.not_feasible.append(tuple(tmp)) #chromosome is not feasible
+               self.not_feasible.append(tuple(x)) #chromosome is not feasible
         return 0
 
 
@@ -86,14 +86,15 @@ class Genetic:
     def __main__(self):
         self.create_population()
         while self.gen_counter < self.max_generation:
-              new_gen = np.array([])
-              self.show_population()
-              self.find_best()
-              self.crossover(new_gen)
-              self.mutation(new_gen)
-              self.get_fitness(new_gen)
-              self.selection()
-              self.gen_counter += 1
+         new_gen = np.array([])
+         self.show_population()
+         self.find_best()
+         self.crossover(new_gen)
+         self.mutation(new_gen)
+         self.get_fitness(new_gen)
+         self.selection()
+         self.gen_counter += 1
+         self.show_population()
         print("Best solution found:", self.best_chrm)
 
     def pop_random(self,lst):
@@ -157,6 +158,7 @@ class Genetic:
 
     #step 6
     def selection(self):
+        self.rm_nonfeasible()
         self.population = self.sort_population()
         print("population conta")
         print(self.population)
@@ -175,6 +177,12 @@ class Genetic:
     def sort_population(self):
         return {k:v for k,v in sorted(self.population.items(), key=lambda item: item[1][2], reverse=True)}
 
+    def rm_nonfeasible(self):
+        pop = self.population.copy()
+        for k,v in pop.items():
+            x,y,z = self.lqbp.get_feasible(list(k),v[0])
+            if not (isinstance(y,(list,pd.core.series.Series,np.ndarray)) and z <= 20):
+               del self.population[k]
 
     def roulette_wheel_spin(self): #we have chromosomes as key and their fitness values as values
         print("POPULATION xandie")
