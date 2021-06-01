@@ -42,7 +42,8 @@ class Genetic:
         i = 0
         while i<self.population_size:
             tmp = np.array([],dtype=np.uint8)
-            for j in range(self.lqbp.m+self.lqbp.ylength):
+            tmp = np.append(tmp,[0])
+            for j in range(self.lqbp.m+self.lqbp.ylength-1):
                 tmp = np.append(tmp,[randint(0,1)])
             if self.get_feasible(tmp):
                 i += 1
@@ -63,7 +64,7 @@ class Genetic:
     def get_feasible(self,tmp):
         x,y,z = self.lqbp.get_feasible(tmp)
         #if tuple(x) not in self.not_feasible:
-        if isinstance(y,(list,pd.core.series.Series,np.ndarray)) and z <= 20: #if the operation has not been successfull, y is -1, so it doesn't enter this if condition
+        if isinstance(y,(list,pd.core.series.Series,np.ndarray)): #and z <= 20: #if the operation has not been successfull, y is -1, so it doesn't enter this if condition
                if tuple(tmp) not in self.population.keys():
                    self.population[tuple(tmp)] = (x,y,z) #store chromosomes in dict as key, which has as value the solution found
                    return 1
@@ -181,7 +182,7 @@ class Genetic:
         pop = self.population.copy()
         for k,v in pop.items():
             x,y,z = self.lqbp.get_feasible(list(k),v[0])
-            if not (isinstance(y,(list,pd.core.series.Series,np.ndarray)) and z <= 20):
+            if not (isinstance(y,(list,pd.core.series.Series,np.ndarray))): #and z <= 20):
                del self.population[k]
 
     def roulette_wheel_spin(self): #we have chromosomes as key and their fitness values as values

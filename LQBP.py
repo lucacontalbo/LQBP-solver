@@ -394,7 +394,9 @@ class LQBP:
 		num = len(tableaut)
 		l = np.array([])
 		for i in range(num-1):
-			if tableaut[i][piv_col] == 0 or tableaut[i][-1] == 0:
+			if tableaut[i][piv_col] == 0:
+				l = np.append(l,[-1])
+			elif tableaut[i][-1] == 0:
 				l = np.append(l,[0])
 			else:
 				l = np.append(l,[tableaut[i][-1]/tableaut[i][piv_col]])
